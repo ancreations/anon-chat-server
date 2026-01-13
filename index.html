@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AnonChat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        /* General Settings */
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #e5ddd5; height: 100vh; display: flex; flex-direction: column; }
+        
+        /* HOME SCREEN (Start Page) */
+        #home-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #075e54; color: white; }
+        #home-screen h1 { margin-bottom: 10px; font-size: 2rem; }
+        #find-btn { padding: 15px 40px; font-size: 1.2rem; background: #25d366; color: white; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-weight: bold; }
+        #find-btn:active { transform: scale(0.95); }
+
+        /* CHAT SCREEN */
+        #chat-screen { display: none; flex-direction: column; height: 100%; }
+        
+        /* Header */
+        header { background: #075e54; color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        header h3 { margin: 0; font-size: 1.1rem; }
+        #leave-btn { background: transparent; border: 1px solid white; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; }
+
+        /* Message Area */
+        #messages { list-style: none; padding: 20px; margin: 0; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* Bubbles */
+        .message { max-width: 75%; padding: 10px 15px; border-radius: 10px; font-size: 1rem; line-height: 1.4; position: relative; word-wrap: break-word; }
+        
+        .my-msg { align-self: flex-end; background: #dcf8c6; color: black; border-top-right-radius: 0; box-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        .stranger-msg { align-self: flex-start; background: white; color: black; border-top-left-radius: 0; box-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        
+        .system-msg { align-self: center; background: #e1f3fb; color: #555; font-size: 0.8rem; padding: 5px 15px; border-radius: 20px; box-shadow: none; }
+
+        /* Input Area */
+        .input-area { background: #f0f0f0; padding: 10px; display: flex; align-items: center; gap: 10px; }
+        #input { flex: 1; padding: 12px; border-radius: 25px; border: none; outline: none; font-size: 1rem; }
+        #send-btn { background: #075e54; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <div id="home-screen">
+        <h1>💬 AnonChat</h1>
+        <p id="status" style="margin-bottom: 30px; opacity: 0.8;">Tap to connect with a stranger</p>
+        <button onclick="findPartner()" id="find-btn">Start Chatting</button>
+    </div>
+
+    <div id="chat-screen">
+        <header>
+            <h3 id="chat-header">👤 Stranger</h3>
+            <button id="leave-btn" onclick="location.reload()">End</button>
+        </header>
+
+        <ul id="messages"></ul>
+
+        <div class="input-area" id="input-area" style="display:none;">
+            <input id="input" placeholder="Type a message..." autocomplete="off" />
+            <button id="send-btn">➤</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        var homeScreen = document.getElementById('home-screen');
+        var chatScreen = document.getElementById('chat-screen');
+        var statusText = document.getElementById('status');
+        var msgList = document.getElementById('messages');
+        var input = document.getElementById('input');
+        var inputArea = document.getElementById('input-area');
+
+        function findPartner() {
+            document.getElementById('find-btn').style.display = 'none';
+            statusText.innerText = "Searching for someone...";
+            socket.emit('find_partner');
+        }
+
+        socket.on('waiting', (msg) => { statusText.innerText = msg; });
+
+        socket.on('partner_found', () => {
+            homeScreen.style.display = 'none';
+            chatScreen.style.display = 'flex';
+            inputArea.style.display = 'flex';
+            msgList.innerHTML = ''; 
+            addMessage("You are connected! Say Hi 👋", "message system-msg");
+        });
+
+        socket.on('chat_message', (msg) => { addMessage(msg, 'message stranger-msg'); });
+
+        socket.on('stranger_disconnected', () => {
+            addMessage("Stranger has left the chat.", "message system-msg");
+            inputArea.style.display = 'none';
+        });
+
+        document.getElementById('send-btn').addEventListener('click', sendMessage);
+        input.addEventListener("keyup", function(event) {
+            if (event.key === "Enter") sendMessage();
+        });
+
+        function sendMessage() {
+            if (input.value.trim()) {
+                socket.emit('chat_message', input.value);
+                addMessage(input.value, 'message my-msg');
+                input.value = '';
+            }
+        }
+
+        function addMessage(msg, className) {
+            var item = document.createElement('li');
+            item.textContent = msg;
+            item.className = className;
+            msgList.appendChild(item);
+            msgList.scrollTo(0, msgList.scrollHeight);
+        }
+    </script>
+</body>
+</html>
+
