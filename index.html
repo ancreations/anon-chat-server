@@ -1,47 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AnonChat</title>
+    <title>AnonymousMallu</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         /* General Settings */
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #e5ddd5; height: 100vh; display: flex; flex-direction: column; }
         
-        /* HOME SCREEN (Start Page) */
+        /* Disable Copy/Save on Images */
+        img { 
+            pointer-events: none; /* ക്ലിക്ക് ചെയ്യാൻ പറ്റില്ല */
+            -webkit-user-select: none; /* സെലക്ട് ചെയ്യാൻ പറ്റില്ല */
+            -webkit-touch-callout: none; /* ലോങ്ങ് പ്രസ് മെനു വരില്ല */
+            max-width: 100%; 
+            border-radius: 10px; 
+            margin-top: 5px;
+        }
+
+        /* HOME SCREEN */
         #home-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #075e54; color: white; }
-        #home-screen h1 { margin-bottom: 10px; font-size: 2rem; }
-        #find-btn { padding: 15px 40px; font-size: 1.2rem; background: #25d366; color: white; border: none; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-weight: bold; }
-        #find-btn:active { transform: scale(0.95); }
+        #find-btn { padding: 15px 40px; font-size: 1.2rem; background: #25d366; color: white; border: none; border-radius: 30px; font-weight: bold; }
 
         /* CHAT SCREEN */
         #chat-screen { display: none; flex-direction: column; height: 100%; }
         
-        /* Header */
-        header { background: #075e54; color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        header h3 { margin: 0; font-size: 1.1rem; }
-        #leave-btn { background: transparent; border: 1px solid white; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; }
+        header { background: #075e54; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; }
+        .header-controls { display: flex; gap: 10px; }
+        
+        /* Buttons */
+        .btn-small { padding: 5px 12px; border-radius: 5px; border: none; color: white; font-size: 0.8rem; cursor: pointer; }
+        #leave-btn { background: transparent; border: 1px solid white; }
+        #block-btn { background: #dc3545; font-weight: bold; } /* Block Button Red */
 
-        /* Message Area */
         #messages { list-style: none; padding: 20px; margin: 0; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         
-        /* Bubbles */
-        .message { max-width: 75%; padding: 10px 15px; border-radius: 10px; font-size: 1rem; line-height: 1.4; position: relative; word-wrap: break-word; }
-        
-        .my-msg { align-self: flex-end; background: #dcf8c6; color: black; border-top-right-radius: 0; box-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
-        .stranger-msg { align-self: flex-start; background: white; color: black; border-top-left-radius: 0; box-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
-        
-        .system-msg { align-self: center; background: #e1f3fb; color: #555; font-size: 0.8rem; padding: 5px 15px; border-radius: 20px; box-shadow: none; }
+        .message { max-width: 75%; padding: 10px 15px; border-radius: 10px; font-size: 1rem; position: relative; word-wrap: break-word; }
+        .my-msg { align-self: flex-end; background: #dcf8c6; }
+        .stranger-msg { align-self: flex-start; background: white; }
+        .system-msg { align-self: center; background: #e1f3fb; color: #555; font-size: 0.8rem; padding: 5px 15px; border-radius: 20px; }
+        .error-msg { align-self: center; background: #ffebee; color: #c62828; font-size: 0.8rem; padding: 5px 15px; border-radius: 20px; }
 
         /* Input Area */
         .input-area { background: #f0f0f0; padding: 10px; display: flex; align-items: center; gap: 10px; }
-        #input { flex: 1; padding: 12px; border-radius: 25px; border: none; outline: none; font-size: 1rem; }
-        #send-btn { background: #075e54; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        #input { flex: 1; padding: 12px; border-radius: 25px; border: none; outline: none; }
+        
+        /* Round Buttons */
+        .icon-btn { width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        #send-btn { background: #075e54; color: white; }
+        #img-btn { background: #e0e0e0; color: #555; } /* Camera Button */
+
     </style>
 </head>
 <body>
 
     <div id="home-screen">
-        <h1>💬 AnonymousMallu</h1>
+        <h1>AnonymousMallu</h1>
         <p id="status" style="margin-bottom: 30px; opacity: 0.8;">Tap to connect with a stranger</p>
         <button onclick="findPartner()" id="find-btn">Start Chatting</button>
     </div>
@@ -49,14 +62,20 @@
     <div id="chat-screen">
         <header>
             <h3 id="chat-header">👤 Stranger</h3>
-            <button id="leave-btn" onclick="location.reload()">End</button>
+            <div class="header-controls">
+                <button id="block-btn" class="btn-small" onclick="blockPartner()">🚫 Block</button>
+                <button id="leave-btn" class="btn-small" onclick="location.reload()">End</button>
+            </div>
         </header>
 
         <ul id="messages"></ul>
 
         <div class="input-area" id="input-area" style="display:none;">
+            <input type="file" id="imgUpload" hidden accept="image/*">
+            
+            <button id="img-btn" class="icon-btn" onclick="document.getElementById('imgUpload').click()">📷</button>
             <input id="input" placeholder="Type a message..." autocomplete="off" />
-            <button id="send-btn">➤</button>
+            <button id="send-btn" class="icon-btn">➤</button>
         </div>
     </div>
 
@@ -69,11 +88,19 @@
         var msgList = document.getElementById('messages');
         var input = document.getElementById('input');
         var inputArea = document.getElementById('input-area');
+        var imgUpload = document.getElementById('imgUpload');
 
         function findPartner() {
             document.getElementById('find-btn').style.display = 'none';
             statusText.innerText = "Searching for someone...";
             socket.emit('find_partner');
+        }
+
+        function blockPartner() {
+            if(confirm("Block this stranger and leave?")) {
+                socket.emit('block_partner');
+                location.reload();
+            }
         }
 
         socket.on('waiting', (msg) => { statusText.innerText = msg; });
@@ -88,11 +115,28 @@
 
         socket.on('chat_message', (msg) => { addMessage(msg, 'message stranger-msg'); });
 
+        // Image Receive Logic
+        socket.on('receive_image', (imgData) => {
+            var item = document.createElement('li');
+            item.className = 'message stranger-msg';
+            // Image Tag with protection
+            item.innerHTML = `<img src="${imgData}" oncontextmenu="return false;">`; 
+            msgList.appendChild(item);
+            msgList.scrollTo(0, msgList.scrollHeight);
+        });
+
         socket.on('stranger_disconnected', () => {
             addMessage("Stranger has left the chat.", "message system-msg");
             inputArea.style.display = 'none';
         });
 
+        socket.on('partner_blocked', () => {
+            addMessage("🚨 Stranger has blocked you.", "message error-msg");
+            inputArea.style.display = 'none';
+            setTimeout(() => location.reload(), 3000); // 3 sec later restart
+        });
+
+        // Sending Logic
         document.getElementById('send-btn').addEventListener('click', sendMessage);
         input.addEventListener("keyup", function(event) {
             if (event.key === "Enter") sendMessage();
@@ -106,6 +150,32 @@
             }
         }
 
+        // Image Upload Logic
+        imgUpload.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                // Size Check (Optional: 5MB limit)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert("Image too big! Please send under 5MB.");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgData = e.target.result;
+                    socket.emit('send_image', imgData); // Send to server
+                    
+                    // Show in my chat
+                    var item = document.createElement('li');
+                    item.className = 'message my-msg';
+                    item.innerHTML = `<img src="${imgData}">`;
+                    msgList.appendChild(item);
+                    msgList.scrollTo(0, msgList.scrollHeight);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         function addMessage(msg, className) {
             var item = document.createElement('li');
             item.textContent = msg;
@@ -116,4 +186,3 @@
     </script>
 </body>
 </html>
-
