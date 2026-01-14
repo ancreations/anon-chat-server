@@ -19,7 +19,12 @@
 
         /* HOME SCREEN */
         #home-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #075e54; color: white; }
-        #find-btn { padding: 15px 40px; font-size: 1.2rem; background: #25d366; color: white; border: none; border-radius: 30px; font-weight: bold; }
+        
+        /* Start Button (Green) */
+        #find-btn { padding: 15px 40px; font-size: 1.2rem; background: #25d366; color: white; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; }
+        
+        /* Stop Button (Red - Hidden by default) */
+        #stop-btn { display: none; padding: 12px 30px; font-size: 1rem; background: #ff4444; color: white; border: none; border-radius: 30px; font-weight: bold; margin-top: 20px; cursor: pointer; }
 
         /* CHAT SCREEN */
         #chat-screen { display: none; flex-direction: column; height: 100%; }
@@ -54,9 +59,12 @@
 <body>
 
     <div id="home-screen">
-        <h1> KeeriChat</h1>
+        <h1>AnonymousMallu</h1>
         <p id="status" style="margin-bottom: 30px; opacity: 0.8;">Tap to connect with a stranger</p>
+        
         <button onclick="findPartner()" id="find-btn">Start Chatting</button>
+        
+        <button onclick="stopSearching()" id="stop-btn">Stop Searching ✖</button>
     </div>
 
     <div id="chat-screen">
@@ -88,11 +96,21 @@
         var input = document.getElementById('input');
         var inputArea = document.getElementById('input-area');
         var imgUpload = document.getElementById('imgUpload');
+        var findBtn = document.getElementById('find-btn');
+        var stopBtn = document.getElementById('stop-btn');
 
         function findPartner() {
-            document.getElementById('find-btn').style.display = 'none';
+            // ബട്ടണുകൾ മാറ്റുന്നു
+            findBtn.style.display = 'none';
+            stopBtn.style.display = 'block'; // Stop button കാണിക്കുന്നു
+            
             statusText.innerText = "Searching for someone...";
             socket.emit('find_partner');
+        }
+
+        // സെർച്ച് നിർത്തി തിരിച്ചു പോകാനുള്ള ഫംഗ്‌ഷൻ
+        function stopSearching() {
+            location.reload(); // പേജ് റീഫ്രഷ് ചെയ്യുന്നു (ഇതാണ് ഏറ്റവും എളുപ്പം)
         }
 
         function blockPartner() {
@@ -146,11 +164,10 @@
             }
         }
 
-        // Image Compression & Sending Logic
+        // Image Logic
         imgUpload.addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
-                // 1. Show 'Sending...' message
                 var statusMsg = addMessage("Sending photo... ⏳", "message system-msg");
 
                 const reader = new FileReader();
@@ -162,7 +179,6 @@
                         var canvas = document.createElement('canvas');
                         var ctx = canvas.getContext('2d');
                         
-                        // Max Width 800px for compression
                         var maxWidth = 800;
                         var scaleSize = maxWidth / img.width;
                         if (img.width > maxWidth) {
@@ -174,11 +190,10 @@
                         }
 
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        var compressedData = canvas.toDataURL('image/jpeg', 0.7); // 70% Quality
+                        var compressedData = canvas.toDataURL('image/jpeg', 0.7);
                         
                         socket.emit('send_image', compressedData); 
                         
-                        // 2. Change 'Sending...' to 'Sent'
                         statusMsg.textContent = "✅ Photo Sent"; 
                         
                         var item = document.createElement('li');
@@ -198,7 +213,7 @@
             item.className = className;
             msgList.appendChild(item);
             msgList.scrollTo(0, msgList.scrollHeight);
-            return item; // Returns the element so we can change text later
+            return item; 
         }
     </script>
 </body>
