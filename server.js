@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    maxHttpBufferSize: 1e7 // 10MB വരെ ഫയൽ അയക്കാൻ സമ്മതിക്കും
+    maxHttpBufferSize: 1e8 // 100MB വരെ ഫയൽ അയക്കാൻ സമ്മതിക്കും
 });
 
 app.use(express.static(__dirname));
