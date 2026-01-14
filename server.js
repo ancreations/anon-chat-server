@@ -5,8 +5,12 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
+
+// 👇 മാറ്റം വരുത്തിയത് ഇവിടെയാണ് (Socket Settings)
 const io = new Server(server, {
-    maxHttpBufferSize: 1e8 // 100MB വരെ ഫയൽ അയക്കാൻ സമ്മതിക്കും
+    maxHttpBufferSize: 1e8, // 100MB വരെ ഫയൽ അയക്കാൻ സമ്മതിക്കും
+    pingTimeout: 60000,     // 60 Seconds (1 മിനിറ്റ് വരെ വെയിറ്റ് ചെയ്യും - Disconnect ആകാതിരിക്കാൻ)
+    pingInterval: 25000     // 25 Seconds (25 സെക്കൻഡ് കൂടുമ്പോൾ ചെക്ക് ചെയ്യും)
 });
 
 app.use(express.static(__dirname));
@@ -52,18 +56,16 @@ io.on('connection', (socket) => {
         }
     });
 
-    // --- NEW: Image Sending ---
     socket.on('send_image', (imgData) => {
         if (socket.partner) {
             socket.partner.emit('receive_image', imgData);
         }
     });
 
-    // --- NEW: Block/Skip ---
     socket.on('block_partner', () => {
         if (socket.partner) {
-            socket.partner.emit('partner_blocked'); // അപ്പുറത്തുള്ള ആൾക്ക് മെസേജ് കൊടുക്കും
-            socket.partner.partner = null; // ബന്ധം വിച്ഛേദിക്കുന്നു
+            socket.partner.emit('partner_blocked'); 
+            socket.partner.partner = null; 
             socket.partner = null;
         }
     });
