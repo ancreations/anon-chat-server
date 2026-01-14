@@ -9,9 +9,9 @@
         
         /* Disable Copy/Save on Images */
         img { 
-            pointer-events: none; /* ക്ലിക്ക് ചെയ്യാൻ പറ്റില്ല */
-            -webkit-user-select: none; /* സെലക്ട് ചെയ്യാൻ പറ്റില്ല */
-            -webkit-touch-callout: none; /* ലോങ്ങ് പ്രസ് മെനു വരില്ല */
+            pointer-events: none; 
+            -webkit-user-select: none; 
+            -webkit-touch-callout: none; 
             max-width: 100%; 
             border-radius: 10px; 
             margin-top: 5px;
@@ -30,7 +30,7 @@
         /* Buttons */
         .btn-small { padding: 5px 12px; border-radius: 5px; border: none; color: white; font-size: 0.8rem; cursor: pointer; }
         #leave-btn { background: transparent; border: 1px solid white; }
-        #block-btn { background: #dc3545; font-weight: bold; } /* Block Button Red */
+        #block-btn { background: #dc3545; font-weight: bold; } 
 
         #messages { list-style: none; padding: 20px; margin: 0; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         
@@ -47,7 +47,7 @@
         /* Round Buttons */
         .icon-btn { width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
         #send-btn { background: #075e54; color: white; }
-        #img-btn { background: #e0e0e0; color: #555; } /* Camera Button */
+        #img-btn { background: #e0e0e0; color: #555; } 
 
     </style>
 </head>
@@ -72,7 +72,6 @@
 
         <div class="input-area" id="input-area" style="display:none;">
             <input type="file" id="imgUpload" hidden accept="image/*">
-            
             <button id="img-btn" class="icon-btn" onclick="document.getElementById('imgUpload').click()">📷</button>
             <input id="input" placeholder="Type a message..." autocomplete="off" />
             <button id="send-btn" class="icon-btn">➤</button>
@@ -115,11 +114,9 @@
 
         socket.on('chat_message', (msg) => { addMessage(msg, 'message stranger-msg'); });
 
-        // Image Receive Logic
         socket.on('receive_image', (imgData) => {
             var item = document.createElement('li');
             item.className = 'message stranger-msg';
-            // Image Tag with protection
             item.innerHTML = `<img src="${imgData}" oncontextmenu="return false;">`; 
             msgList.appendChild(item);
             msgList.scrollTo(0, msgList.scrollHeight);
@@ -133,10 +130,9 @@
         socket.on('partner_blocked', () => {
             addMessage("🚨 Stranger has blocked you.", "message error-msg");
             inputArea.style.display = 'none';
-            setTimeout(() => location.reload(), 3000); // 3 sec later restart
+            setTimeout(() => location.reload(), 3000); 
         });
 
-        // Sending Logic
         document.getElementById('send-btn').addEventListener('click', sendMessage);
         input.addEventListener("keyup", function(event) {
             if (event.key === "Enter") sendMessage();
@@ -150,27 +146,46 @@
             }
         }
 
-        // Image Upload Logic
+        // 👇👇 പുതിയ Compression Code 👇👇
         imgUpload.addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
-                // Size Check (Optional: 5MB limit)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert("Image too big! Please send under 5MB.");
-                    return;
-                }
+                // ലോഡിംഗ് കാണിക്കുന്നു...
+                addMessage("Sending photo...", "message system-msg");
 
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const imgData = e.target.result;
-                    socket.emit('send_image', imgData); // Send to server
+                    var img = new Image();
+                    img.src = e.target.result;
                     
-                    // Show in my chat
-                    var item = document.createElement('li');
-                    item.className = 'message my-msg';
-                    item.innerHTML = `<img src="${imgData}">`;
-                    msgList.appendChild(item);
-                    msgList.scrollTo(0, msgList.scrollHeight);
+                    img.onload = function() {
+                        var canvas = document.createElement('canvas');
+                        var ctx = canvas.getContext('2d');
+                        
+                        // ഫോട്ടോയുടെ വലിപ്പം കുറയ്ക്കുന്നു (Max 800px Width)
+                        var maxWidth = 800;
+                        var scaleSize = maxWidth / img.width;
+                        if (img.width > maxWidth) {
+                            canvas.width = maxWidth;
+                            canvas.height = img.height * scaleSize;
+                        } else {
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                        }
+
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // Quality 70% ആക്കുന്നു
+                        var compressedData = canvas.toDataURL('image/jpeg', 0.7);
+                        
+                        socket.emit('send_image', compressedData); 
+                        
+                        var item = document.createElement('li');
+                        item.className = 'message my-msg';
+                        item.innerHTML = `<img src="${compressedData}">`;
+                        msgList.appendChild(item);
+                        msgList.scrollTo(0, msgList.scrollHeight);
+                    }
                 };
                 reader.readAsDataURL(file);
             }
