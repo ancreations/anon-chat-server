@@ -1,63 +1,84 @@
 const express = require('express');
-const app = express();
 const http = require('http');
-const server = http.createServer(app);
 const { Server } = require("socket.io");
-const io = new Server(server);
+const path = require('path');
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    maxHttpBufferSize: 1e7 // 10MB വരെ ഫയൽ അയക്കാൻ സമ്മതിക്കും
+});
+
+app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-let waitingUser = null;
+let waitingUsers = [];
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+    console.log('A user connected:', socket.id);
+    socket.partner = null;
 
-  socket.on('find_partner', () => {
-    if (waitingUser) {
-      // Pair users
-      const roomName = waitingUser.id + '#' + socket.id;
-      socket.join(roomName);
-      waitingUser.join(roomName);
+    socket.on('find_partner', () => {
+        if (socket.partner) return;
 
-      // Notify both
-      io.to(roomName).emit('partner_found');
-      
-      waitingUser = null;
-    } else {
-      waitingUser = socket;
-      socket.emit('waiting', 'Searching for a stranger...');
-    }
-  });
+        if (waitingUsers.length > 0) {
+            let partner = waitingUsers.pop();
+            
+            if (partner.id === socket.id) {
+                waitingUsers.push(socket);
+                return;
+            }
 
-  socket.on('chat_message', (msg) => {
-    const rooms = Array.from(socket.rooms);
-    const chatRoom = rooms.find(room => room !== socket.id);
-    if (chatRoom) {
-      socket.to(chatRoom).emit('chat_message', msg);
-    }
-  });
+            // Connect them
+            socket.partner = partner;
+            partner.partner = socket;
 
-  // NEW: Handle user leaving
-  socket.on('disconnecting', () => {
-    // Find the room they were in
-    const rooms = Array.from(socket.rooms);
-    const chatRoom = rooms.find(room => room !== socket.id);
-    
-    // Notify the partner in that room
-    if (chatRoom) {
-      socket.to(chatRoom).emit('stranger_disconnected');
-    }
-    
-    // If they were waiting, remove from waitlist
-    if (waitingUser === socket) {
-      waitingUser = null;
-    }
-  });
+            // Notify both
+            socket.emit('partner_found');
+            partner.emit('partner_found');
+
+        } else {
+            waitingUsers.push(socket);
+            socket.emit('waiting', "Searching for someone...");
+        }
+    });
+
+    socket.on('chat_message', (msg) => {
+        if (socket.partner) {
+            socket.partner.emit('chat_message', msg);
+        }
+    });
+
+    // --- NEW: Image Sending ---
+    socket.on('send_image', (imgData) => {
+        if (socket.partner) {
+            socket.partner.emit('receive_image', imgData);
+        }
+    });
+
+    // --- NEW: Block/Skip ---
+    socket.on('block_partner', () => {
+        if (socket.partner) {
+            socket.partner.emit('partner_blocked'); // അപ്പുറത്തുള്ള ആൾക്ക് മെസേജ് കൊടുക്കും
+            socket.partner.partner = null; // ബന്ധം വിച്ഛേദിക്കുന്നു
+            socket.partner = null;
+        }
+    });
+
+    socket.on('disconnect', () => {
+        if (socket.partner) {
+            socket.partner.emit('stranger_disconnected');
+            socket.partner.partner = null;
+        } else {
+            waitingUsers = waitingUsers.filter(user => user.id !== socket.id);
+        }
+    });
 });
 
-server.listen(3000, () => {
-  console.log('Server running on port 3000');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
-
