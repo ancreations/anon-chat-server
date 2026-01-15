@@ -7,7 +7,6 @@
         /* General Settings */
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #e5ddd5; height: 100vh; display: flex; flex-direction: column; }
         
-        /* Disable Copy/Save on Images */
         img { 
             pointer-events: none; 
             -webkit-user-select: none; 
@@ -20,29 +19,69 @@
         /* HOME SCREEN */
         #home-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #075e54; color: white; text-align: center; padding: 20px; position: relative; }
         
-        /* 👇 Help Icon (Small Size) */
+        /* Help Icon */
         .help-icon {
             position: absolute;
             top: 20px;
             right: 20px;
-            font-size: 1.2rem; /* വലിപ്പം കുറച്ചു */
+            font-size: 1.2rem;
             cursor: pointer;
             opacity: 0.8;
             background: rgba(255, 255, 255, 0.2);
-            width: 35px;  /* വലിപ്പം കുറച്ചു */
-            height: 35px; /* വലിപ്പം കുറച്ചു */
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
-        /* Title Style */
         h1 { font-size: 2rem; margin-bottom: 10px; }
 
         #find-btn { padding: 15px 40px; font-size: 1.2rem; background: #25d366; color: white; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         
         #stop-btn { display: none; padding: 12px 30px; font-size: 1rem; background: #ff4444; color: white; border: none; border-radius: 30px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+
+        /* 👇 പുതിയ Popup Design (Modal) */
+        .modal-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-box {
+            background: white;
+            color: #333;
+            padding: 25px;
+            border-radius: 15px;
+            width: 85%;
+            max-width: 350px;
+            text-align: left;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; color: #d32f2f; display: flex; align-items: center; gap: 8px; }
+        .modal-list { font-size: 0.95rem; line-height: 1.6; margin-left: 15px; padding: 0; }
+        .modal-close-btn { 
+            display: block; 
+            width: 100%; 
+            padding: 12px; 
+            margin-top: 20px; 
+            background: #075e54; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            text-align: center;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
         /* CHAT SCREEN */
         #chat-screen { display: none; flex-direction: column; height: 100%; }
@@ -73,11 +112,24 @@
 </head>
 <body>
 
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">⚠️ Connection Issue?</div>
+            <p style="font-size: 0.9rem; color: #555; margin-bottom: 10px;">If chat disconnects when minimized:</p>
+            <ol class="modal-list">
+                <li>Go to <b>Phone Settings</b></li>
+                <li>Go to <b>Battery > App Battery Management</b></li>
+                <li>Select <b>AnonymousMallu</b></li>
+                <li>Turn <b>OFF</b> background restrictions (Select 'Don't optimize')</li>
+            </ol>
+            <button class="modal-close-btn" onclick="closeHelp()">OK, Got it</button>
+        </div>
+    </div>
+
     <div id="home-screen">
         <div class="help-icon" onclick="showHelp()">💡</div>
 
         <h1>💬 AnonymousMallu</h1>
-        
         <p id="status" style="margin-bottom: 30px; opacity: 0.8;">Tap to connect with a stranger</p>
         
         <button onclick="findPartner()" id="find-btn">Start Chatting</button>
@@ -121,6 +173,7 @@
         var imgUpload = document.getElementById('imgUpload');
         var findBtn = document.getElementById('find-btn');
         var stopBtn = document.getElementById('stop-btn');
+        var helpModal = document.getElementById('helpModal');
 
         function findPartner() {
             findBtn.style.display = 'none';
@@ -140,8 +193,20 @@
             }
         }
         
+        // 👇 Popup Functions (New)
         function showHelp() {
-            alert('⚠️ Connection Issue?\n\nIf chat disconnects when minimized:\n1. Go to Phone Settings\n2. Battery > App Battery Management\n3. Select this app\n4. Turn OFF \'Allow background activity\' restrictions (Select \'Don\'t optimize\')');
+            helpModal.style.display = 'flex';
+        }
+
+        function closeHelp() {
+            helpModal.style.display = 'none';
+        }
+
+        // Close modal if clicked outside
+        window.onclick = function(event) {
+            if (event.target == helpModal) {
+                closeHelp();
+            }
         }
 
         socket.on('waiting', (msg) => { statusText.innerText = msg; });
