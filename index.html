@@ -20,7 +20,6 @@
         /* HOME SCREEN */
         #home-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #075e54; color: white; }
         
-        /* Start Button (Green) */
         #find-btn { padding: 15px 40px; font-size: 1.2rem; background: #25d366; color: white; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; }
         
         /* Stop Button (Red - Hidden by default) */
@@ -59,11 +58,10 @@
 <body>
 
     <div id="home-screen">
-        <h1>KeeriChat</h1>
+        <h1>AnonymousMallu</h1>
         <p id="status" style="margin-bottom: 30px; opacity: 0.8;">Tap to connect with a stranger</p>
         
         <button onclick="findPartner()" id="find-btn">Start Chatting</button>
-        
         <button onclick="stopSearching()" id="stop-btn">Stop Searching ✖</button>
     </div>
 
@@ -88,7 +86,14 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        var socket = io();
+        // 👇 കണക്ഷൻ ശക്തമാക്കാനുള്ള പുതിയ കോഡ്
+        var socket = io({
+            reconnection: true,
+            reconnectionAttempts: 5,
+            timeout: 60000,
+            transports: ['websocket', 'polling'] 
+        });
+
         var homeScreen = document.getElementById('home-screen');
         var chatScreen = document.getElementById('chat-screen');
         var statusText = document.getElementById('status');
@@ -100,17 +105,14 @@
         var stopBtn = document.getElementById('stop-btn');
 
         function findPartner() {
-            // ബട്ടണുകൾ മാറ്റുന്നു
             findBtn.style.display = 'none';
-            stopBtn.style.display = 'block'; // Stop button കാണിക്കുന്നു
-            
+            stopBtn.style.display = 'block'; 
             statusText.innerText = "Searching for someone...";
             socket.emit('find_partner');
         }
 
-        // സെർച്ച് നിർത്തി തിരിച്ചു പോകാനുള്ള ഫംഗ്‌ഷൻ
         function stopSearching() {
-            location.reload(); // പേജ് റീഫ്രഷ് ചെയ്യുന്നു (ഇതാണ് ഏറ്റവും എളുപ്പം)
+            location.reload(); 
         }
 
         function blockPartner() {
