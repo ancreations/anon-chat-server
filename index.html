@@ -20,23 +20,26 @@
         /* HOME SCREEN */
         #home-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #075e54; color: white; text-align: center; padding: 20px; position: relative; }
         
-        /* Help Icon (New - Top Right) */
+        /* 👇 Help Icon (Small Size) */
         .help-icon {
             position: absolute;
             top: 20px;
             right: 20px;
-            font-size: 1.5rem;
+            font-size: 1.2rem; /* വലിപ്പം കുറച്ചു */
             cursor: pointer;
             opacity: 0.8;
             background: rgba(255, 255, 255, 0.2);
-            width: 40px;
-            height: 40px;
+            width: 35px;  /* വലിപ്പം കുറച്ചു */
+            height: 35px; /* വലിപ്പം കുറച്ചു */
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
+        /* Title Style */
+        h1 { font-size: 2rem; margin-bottom: 10px; }
+
         #find-btn { padding: 15px 40px; font-size: 1.2rem; background: #25d366; color: white; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         
         #stop-btn { display: none; padding: 12px 30px; font-size: 1rem; background: #ff4444; color: white; border: none; border-radius: 30px; font-weight: bold; margin-top: 20px; cursor: pointer; }
@@ -73,7 +76,8 @@
     <div id="home-screen">
         <div class="help-icon" onclick="showHelp()">💡</div>
 
-        <h1>AnonymousMallu</h1>
+        <h1>💬 AnonymousMallu</h1>
+        
         <p id="status" style="margin-bottom: 30px; opacity: 0.8;">Tap to connect with a stranger</p>
         
         <button onclick="findPartner()" id="find-btn">Start Chatting</button>
@@ -136,7 +140,6 @@
             }
         }
         
-        // Help Alert Function
         function showHelp() {
             alert('⚠️ Connection Issue?\n\nIf chat disconnects when minimized:\n1. Go to Phone Settings\n2. Battery > App Battery Management\n3. Select this app\n4. Turn OFF \'Allow background activity\' restrictions (Select \'Don\'t optimize\')');
         }
